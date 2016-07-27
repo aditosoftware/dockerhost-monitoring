@@ -24,7 +24,7 @@ API Port of Icinga2 Server
 
     MONITORING_API_PORT=5665
 
-Name of Docker Host, you need this to define, which containers will be monitor this container
+Name of docker host (this will be written in icinga2 conf as a custom vars)
 
     DOCKERSERVERNAME=superdocker
     
@@ -67,4 +67,22 @@ Time to resend notification
         - LOOPTIME=2m
       volumes:
         - /var/run/docker.sock:/docker.sock
+      restart: always
+      
+## Container configuration
+You need to add to the container, that you will monitorin the label "monitoring=true".
+If you will monitor processes in container you need to define this label "processes: '["apache2", "mysqld", "python","vi"]'"
+
+in docker-compose.yml
+
+    nginx1:
+      image: nginx
+      hostname: proxyhosting
+      ports:
+       - "192.168.42.74:9295:80"
+      labels:
+        monitoring: "true"
+        processes: '["nginx"]'
+      volumes:
+       - /etc/localtime:/etc/localtime:ro
       restart: always
