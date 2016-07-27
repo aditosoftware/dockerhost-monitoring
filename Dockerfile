@@ -11,6 +11,7 @@ RUN \
 	curl -sL https://deb.nodesource.com/setup_6.x | bash - &&\
 	apt-get install nodejs -y &&\
     cd /icingamon && npm i &&\
+	chmod +x /run.sh &&\
 	rm -rf /var/lib/apt/lists/*
 
 VOLUME ["/icingamon"]
