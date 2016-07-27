@@ -70,8 +70,8 @@ Time to resend notification
       restart: always
       
 ## Container configuration
-You need to add to the container, that you will monitorin the label "monitoring=true".
-If you will monitor processes in container you need to define this label "processes: '["apache2", "mysqld", "python","vi"]'"
+You need to add to the container, that you will to monitor the label "monitoring=true".
+If you will monitor processes in container you need to define for this a label "processes: '["apache2", "mysqld", "python","vi"]'"
 
 in docker-compose.yml
 
