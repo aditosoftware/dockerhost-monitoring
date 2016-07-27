@@ -86,5 +86,3 @@ in docker-compose.yml
       volumes:
        - /etc/localtime:/etc/localtime:ro
       restart: always
-
-@s
