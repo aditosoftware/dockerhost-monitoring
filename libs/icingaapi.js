@@ -9,6 +9,7 @@ var icingaapi = function (url, port, user, pass) {
 
 icingaapi.prototype.getServices = function (callback) {
     var self = this;
+    var state;
 
     var options = {
         hostname: self.url,
@@ -21,15 +22,11 @@ icingaapi.prototype.getServices = function (callback) {
 
     var req = https.request(options, (res) => {
         res.on('data', (d) => {
-            if (res.statusCode == "200") {
-                return callback(null, "" + d);
-            } else {
-                return callback({
-                    "Statuscode": res.statusCode,
-                    "StatusMessage": res.statusMessage
-                }, null);
+            state = {
+                "Statuscode": res.statusCode,
+                "StatusMessage": res.statusMessage,
+                "Statecustom": successMesage
             }
-
         });
     });
     req.end();
@@ -37,6 +34,14 @@ icingaapi.prototype.getServices = function (callback) {
     req.on('error', (e) => {
         return callback(e, null);
     });
+
+    req.on('close', function (e) {
+        if (state.Statuscode == "200") {
+            return callback(null, "" + state.Statecustom);
+        } else {
+            return callback("" + state);
+        }
+    })
 }
 icingaapi.prototype.getHosts = function (callback) {
     var self = this;
@@ -107,6 +112,8 @@ icingaapi.prototype.getHostFiltered = function (filter, callback) {
 
 icingaapi.prototype.getService = function (ServerName, ServiceName, callback) {
     var self = this;
+    var state;
+
     var options = {
         hostname: self.url,
         port: self.port,
@@ -117,16 +124,12 @@ icingaapi.prototype.getService = function (ServerName, ServiceName, callback) {
     }
 
     var req = https.request(options, (res) => {
-        res.on('data', (d) => {
-            if (res.statusCode == "200") {
-                return callback(null, "" + d);
-            } else {
-                return callback({
-                    "Statuscode": res.statusCode,
-                    "StatusMessage": res.statusMessage
-                }, null);
+        res.on('data', (successMesage) => {
+            state = {
+                "Statuscode": res.statusCode,
+                "StatusMessage": res.statusMessage,
+                "Statecustom": successMesage
             }
-
         });
     });
     req.end();
@@ -134,6 +137,22 @@ icingaapi.prototype.getService = function (ServerName, ServiceName, callback) {
     req.on('error', (e) => {
         return callback(e, null);
     });
+
+    req.on('close', function (e) {
+        if (state.Statuscode == "200" || state.Statuscode == "404") {
+            return callback(null, {
+                "Statuscode": state.Statuscode,
+                "Statecustom": state.Statecustom 
+            });
+        } else {
+            return callback({
+                "Statuscode": state.Statuscode,
+                "StatusMessage": state.StatusMessage
+            }, null);
+        }
+    })
+
+
 }
 icingaapi.prototype.getHost = function (ServerName, callback) {
     var self = this;
@@ -207,7 +226,7 @@ icingaapi.prototype.getServiceWithState = function (state, callback) {
 }
 icingaapi.prototype.createHost = function (template, host, displayname, gruppe, onServer, callback) {
     var self = this;
-
+    var state;
     var hostObj = JSON.stringify({
         "templates": [template],
         "attrs": {
@@ -216,7 +235,7 @@ icingaapi.prototype.createHost = function (template, host, displayname, gruppe, 
             "vars.server": onServer
         }
     })
-    
+
     var options = {
         hostname: self.url,
         port: self.port,
@@ -231,13 +250,10 @@ icingaapi.prototype.createHost = function (template, host, displayname, gruppe, 
     };
     var req = https.request(options, (res) => {
         res.on('data', (successMesage) => {
-            if (res.statusCode == "200") {
-                return callback(null, "" + successMesage);
-            } else {
-                return callback({
-                    "Statuscode": res.statusCode,
-                    "StatusMessage": res.statusMessage
-                }, null);
+            state = {
+                "Statuscode": res.statusCode,
+                "StatusMessage": res.statusMessage,
+                "Statecustom": successMesage
             }
         });
     });
@@ -246,9 +262,17 @@ icingaapi.prototype.createHost = function (template, host, displayname, gruppe, 
     req.on('error', (e) => {
         return callback(e, null);
     });
+    req.on('close', function (e) {
+        if (state.Statuscode == "200") {
+            return callback(null, "" + state.Statecustom);
+        } else {
+            return callback("" + state.Statecustom, null);
+        }
+    })
 }
 icingaapi.prototype.createService = function (template, host, service, displayname, gruppe, onServer, callback) {
     var self = this;
+    var state;
 
     var serviceObj = JSON.stringify({
         "templates": [template],
@@ -272,13 +296,10 @@ icingaapi.prototype.createService = function (template, host, service, displayna
     };
     var req = https.request(options, (res) => {
         res.on('data', (successMesage) => {
-            if (res.statusCode == "200") {
-                return callback(null, "" + successMesage);
-            } else {
-                return callback({
-                    "Statuscode": res.statusCode,
-                    "StatusMessage": res.statusMessage
-                }, null);
+            state = {
+                "Statuscode": res.statusCode,
+                "StatusMessage": res.statusMessage,
+                "Statecustom": successMesage
             }
         });
     });
@@ -287,6 +308,14 @@ icingaapi.prototype.createService = function (template, host, service, displayna
     req.on('error', (e) => {
         return callback(e, null);
     });
+
+    req.on('close', function (e) {
+        if (state.Statuscode == "200") {
+            return callback(null, "" + state.Statecustom);
+        } else {
+            return callback("" + state.Statecustom, null);
+        }
+    })
 }
 icingaapi.prototype.createServiceCustom = function (serviceObj, host, service, callback) {
     var self = this;
@@ -424,7 +453,8 @@ icingaapi.prototype.deleteService = function (service, host, callback) {
 }
 icingaapi.prototype.setHostState = function (host, hostState, StateMessage, callback) {
     var self = this;
-    
+    var statemess;
+
     var state = ({
         "exit_status": hostState,
         "plugin_output": StateMessage
@@ -444,13 +474,10 @@ icingaapi.prototype.setHostState = function (host, hostState, StateMessage, call
     }
     var req = https.request(options, (res) => {
         res.on('data', (stateMessage) => {
-            if (res.statusCode == "200") {
-                return callback(null, "" + stateMessage);
-            } else {
-                return callback({
-                    "Statuscode": res.statusCode,
-                    "StatusMessage": res.statusMessage
-                }, null);
+            statemess = {
+                "Statuscode": res.statusCode,
+                "StatusMessage": res.statusMessage,
+                "Statecustom": stateMessage
             }
         });
     });
@@ -459,11 +486,25 @@ icingaapi.prototype.setHostState = function (host, hostState, StateMessage, call
     req.on('error', (e) => {
         return callback(e, null);
     });
+
+    req.on('close', function (e) {
+        if (statemess.Statuscode == "200") {
+            return callback(null, {
+                "Statuscode": statemess.Statuscode,
+                "StatusMessage": statemess.StatusMessage
+            });
+        } else {
+            return callback({
+                "Statuscode": statemess.Statuscode,
+                "StatusMessage": statemess.StatusMessage
+            }, null);
+        }
+    })
 }
 
 icingaapi.prototype.setServiceState = function (service, host, serviceState, callback) {
     var self = this;
-
+    var statemess;
     var state = ({
         "exit_status": serviceState,
     });
@@ -494,13 +535,10 @@ icingaapi.prototype.setServiceState = function (service, host, serviceState, cal
     }
     var req = https.request(options, (res) => {
         res.on('data', (stateMessage) => {
-            if (res.statusCode == "200") {
-                return callback(null, "" + stateMessage);
-            } else {
-                return callback({
-                    "Statuscode": res.statusCode,
-                    "StatusMessage": res.statusMessage
-                }, null);
+            statemess = {
+                "Statuscode": res.statusCode,
+                "StatusMessage": res.statusMessage,
+                "Statecustom": stateMessage
             }
         });
     });
@@ -509,9 +547,20 @@ icingaapi.prototype.setServiceState = function (service, host, serviceState, cal
     req.on('error', (e) => {
         return callback(e, null);
     });
+
+    req.on('close', function (e) {
+        if (statemess.Statuscode == "200") {
+            return callback(null, "" + statemess.stateMessage);
+        } else {
+            return callback({
+                "Statuscode": statemess.statusCode,
+                "StatusMessage": statemess.statusMessage
+            }, null);
+        }
+    })
 }
 
-icingaapi.prototype.getHostState = function(hostName, callback) {
+icingaapi.prototype.getHostState = function (hostName, callback) {
     var self = this;
 
     var options = {
@@ -525,7 +574,7 @@ icingaapi.prototype.getHostState = function(hostName, callback) {
 
     var req = https.request(options, (res) => {
         res.on('data', (d) => {
-            console.log(""+d);
+            console.log("" + d);
             if (res.statusCode == "200") {
                 var rs = d.toString();
                 var result = JSON.parse(rs).results;

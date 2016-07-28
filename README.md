@@ -48,6 +48,10 @@ Time to resend notification
     
     LOOPTIME=2m
     
+Enable Debug
+
+    DEBUGNODE=true
+    
 ## docker-compose.yml
 
     icinga2mon:
@@ -70,7 +74,7 @@ Time to resend notification
       restart: always
       
 ## Container configuration
-You need to add to the container, that you will to monitor the label "monitoring=true".
+If you will not monitor a container, then add the label "monitoring=false"
 If you will monitor processes in container you need to define for this a label "processes: '["apache2", "mysqld", "python","vi"]'"
 
 in docker-compose.yml
@@ -86,3 +90,6 @@ in docker-compose.yml
       volumes:
        - /etc/localtime:/etc/localtime:ro
       restart: always
+      
+# We've already created a icinga2 container, you can use it with this container. 
+You find the icinga2 container [here](https://hub.docker.com/r/adito/icinga2/)
