@@ -142,7 +142,7 @@ icingaapi.prototype.getService = function (ServerName, ServiceName, callback) {
         if (state.Statuscode == "200" || state.Statuscode == "404") {
             return callback(null, {
                 "Statuscode": state.Statuscode,
-                "Statecustom": state.Statecustom 
+                "Statecustom": state.Statecustom
             });
         } else {
             return callback({
@@ -574,7 +574,6 @@ icingaapi.prototype.getHostState = function (hostName, callback) {
 
     var req = https.request(options, (res) => {
         res.on('data', (d) => {
-            console.log("" + d);
             if (res.statusCode == "200") {
                 var rs = d.toString();
                 var result = JSON.parse(rs).results;
