@@ -119,16 +119,30 @@ docker.listContainers(opts, function (err, containers) {
         var container = docker.getContainer(containers[i].Id);
         //write an array with all containers on docker host
         container.inspect(function (err, conData) {
-            if (conData.Config.Labels.monitoring != "false") {
+            if (conData.Config.Labels == null) {
                 dockerCon.push({
                     "id": conData.Id.slice(0, 12),
                     "name": conData.Name.slice(1, conData.Name.length),
                     "state": conData.State.Status,
                     "pid": conData.State.Pid,
                     "started": conData.State.StartedAt,
-                    "processes": conData.Config.Labels.processes
+                    "processes": null
                 });
+
+            } else {
+
+                if (conData.Config.Labels.monitoring != "false") {
+                    dockerCon.push({
+                        "id": conData.Id.slice(0, 12),
+                        "name": conData.Name.slice(1, conData.Name.length),
+                        "state": conData.State.Status,
+                        "pid": conData.State.Pid,
+                        "started": conData.State.StartedAt,
+                        "processes": conData.Config.Labels.processes
+                    });
+                }
             }
+
         })
     }
     //get all host objects of icinga server with filter "servername (system var)"
