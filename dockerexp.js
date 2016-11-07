@@ -16,6 +16,8 @@ const hostgroup = process.env.HOSTGROUP;
 const servicegroup = process.env.SERVICEGROUP
 const debugnode = process.env.DEBUGNODE; //if you need debug
 
+
+
 var icingaServer = new icingaapi(monUrl, monAPIPort, monAPIUser, monAPIPass); //create icingaapi object
 var docker = new Docker({ socketPath: dockersock }); //create docker object
 
@@ -33,6 +35,18 @@ var logger = new (winston.Logger)({ //define winston object
 })
 
 logger.debug("D001:DEBUG on ++++++++++++++++++++++++++++++++++");
+logger.debug("D002: Vars Info: ");
+logger.debug("	DOCKERSOCK:  " + dockersock);
+logger.debug("	MONITORING_API_URL:  " + monUrl);
+logger.debug('	MONITORING_API_PORT:  ' + monAPIPort);
+logger.debug('	MONITORING_API_USER:  ' + monAPIUser);
+logger.debug('	MONITORING_API_PASS:  ' + monAPIPass);
+logger.debug('	DOCKERSERVERNAME:  ' + servername);
+logger.debug('	TEMPLATEHOST:  ' + templatehost);
+logger.debug('	TEMPLATESERVICE:  ' + templateservice);
+logger.debug('	HOSTGROUP:  ' + hostgroup);
+logger.debug('	SERVICEGROUP:  ' + servicegroup);
+logger.debug('	DEBUGNODE:  ' + debugnode);
 
 var dockerCon = []; //arr to write docker container
 var icingaCon = []; //arr to write container, that already exist on icinga2 server
@@ -160,8 +174,7 @@ docker.listContainers(opts, function (err, containers) {
             }
 
             deleteDiffToDocker(dockerCon, icingaCon); //delete host objects in icinga2 if a container on docker host don't exist
-            createDiffToDocker(dockerCon, icingaCon); //create host objects in icinga2 if found a docker container, that not already exist in icinga2 
-
+            createDiffToDocker(dockerCon, icingaCon); //create host objects in icinga2 if found a docker container, that not already exist in icinga2
             for (var i = 0; i < dockerCon.length; i++) {
                 setHostState(dockerCon[i]); //set state of host object in icinga for all containers
             }

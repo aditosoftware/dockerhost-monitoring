@@ -1,0 +1,12 @@
+#for test
+export DOCKERSOCK=/var/run/docker.sock
+export MONITORING_API_URL=monitoring.example.com
+export MONITORING_API_USER=root
+export MONITORING_API_PASS=pass
+export MONITORING_API_PORT=5665
+export DOCKERSERVERNAME=testVagrant
+export TEMPLATEHOST=passive-host
+export TEMPLATESERVICE=passive-service
+export HOSTGROUP=adito
+export SERVICEGROUP=adito
+export LOOPTIME=2m

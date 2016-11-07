@@ -74,10 +74,10 @@ icingaapi.prototype.getHosts = function (callback) {
         return callback(e, null);
     });
 }
-
 icingaapi.prototype.getHostFiltered = function (filter, callback) {
     var self = this;
-
+    var resData = '';
+    
     var options = {
         hostname: self.url,
         port: self.port,
@@ -90,26 +90,24 @@ icingaapi.prototype.getHostFiltered = function (filter, callback) {
             "Content-Type": "applicatoin/json"
         }
     }
-    var req = https.request(options, (res) => {
-        res.on('data', (d) => {
-            if (res.statusCode == "200") {
-                var output = JSON.parse(d);
-                return callback(null, output.results);
-            } else {
-                return callback({
-                    "Statuscode": res.statusCode,
-                    "StatusMessage": res.statusMessage
-                }, null);
-            }
-        });
+    var req = https.request(options, function(res){
+      res.on('data', function(chunk){
+        resData += chunk;
+      })
+      res.on('end', function(){
+        if (res.statusCode == "200") {
+          var output = JSON.parse(resData);
+          return callback(null, output.results);
+        } else {
+          return callback({
+            "Statuscode": res.statusCode,
+            "StatusMessage": res.statusMessage
+          }, null);
+        }
+      })
     });
     req.end(JSON.stringify(filter));
-
-    req.on('error', (e) => {
-        return callback(e, null);
-    });
 }
-
 icingaapi.prototype.getService = function (ServerName, ServiceName, callback) {
     var self = this;
     var state;
@@ -501,7 +499,6 @@ icingaapi.prototype.setHostState = function (host, hostState, StateMessage, call
         }
     })
 }
-
 icingaapi.prototype.setServiceState = function (service, host, serviceState, callback) {
     var self = this;
     var statemess;
@@ -559,7 +556,6 @@ icingaapi.prototype.setServiceState = function (service, host, serviceState, cal
         }
     })
 }
-
 icingaapi.prototype.getHostState = function (hostName, callback) {
     var self = this;
 
