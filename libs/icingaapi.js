@@ -1,10 +1,11 @@
 const https = require("https");
 
-var icingaapi = function (url, port, user, pass) {
+var icingaapi = function (url, port, user, pass, timeout) {
     this.url = url;
     this.port = port;
     this.user = user;
     this.pass = pass;
+    this.timeout = timeout;
 }; //construct
 
 icingaapi.prototype.getServices = function (callback) {
@@ -13,6 +14,7 @@ icingaapi.prototype.getServices = function (callback) {
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/services',
         method: 'GET',
@@ -29,6 +31,7 @@ icingaapi.prototype.getServices = function (callback) {
             }
         });
     });
+    req.set
     req.end();
 
     req.on('error', (e) => {
@@ -48,6 +51,7 @@ icingaapi.prototype.getHosts = function (callback) {
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/Hosts',
         method: 'GET',
@@ -80,6 +84,7 @@ icingaapi.prototype.getHostFiltered = function (filter, callback) {
     
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/hosts/',
         method: 'POST',
@@ -114,6 +119,7 @@ icingaapi.prototype.getService = function (ServerName, ServiceName, callback) {
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/services/' + ServerName + "!" + ServiceName,
         method: 'GET',
@@ -156,6 +162,7 @@ icingaapi.prototype.getHost = function (ServerName, callback) {
     var self = this;
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/hosts/' + ServerName,
         method: 'GET',
@@ -193,6 +200,7 @@ icingaapi.prototype.getServiceWithState = function (state, callback) {
     });
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/services',
         method: 'POST',
@@ -236,6 +244,7 @@ icingaapi.prototype.createHost = function (template, host, displayname, gruppe, 
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/hosts/' + host,
         rejectUnauthorized: false,
@@ -282,6 +291,7 @@ icingaapi.prototype.createService = function (template, host, service, displayna
     })
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/services/' + host + "!" + service,
         rejectUnauthorized: false,
@@ -320,6 +330,7 @@ icingaapi.prototype.createServiceCustom = function (serviceObj, host, service, c
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/services/' + host + "!" + service,
         rejectUnauthorized: false,
@@ -353,6 +364,7 @@ icingaapi.prototype.createHostCustom = function (hostObj, host, callback) {
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/hosts/' + host,
         rejectUnauthorized: false,
@@ -385,6 +397,7 @@ icingaapi.prototype.deleteHost = function (host, callback) {
     var self = this;
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/hosts/' + host + "?cascade=1",
         method: 'DELETE',
@@ -419,6 +432,7 @@ icingaapi.prototype.deleteService = function (service, host, callback) {
     var self = this;
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/services/' + host + "!" + service + "?cascade=1",
         method: 'DELETE',
@@ -460,6 +474,7 @@ icingaapi.prototype.setHostState = function (host, hostState, StateMessage, call
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/actions/process-check-result?host=' + host,
         method: 'POST',
@@ -520,6 +535,7 @@ icingaapi.prototype.setServiceState = function (service, host, serviceState, cal
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/actions/process-check-result?service=' + host + "!" + service,
         method: 'POST',
@@ -561,6 +577,7 @@ icingaapi.prototype.getHostState = function (hostName, callback) {
 
     var options = {
         hostname: self.url,
+        timeout: self.timeout,
         port: self.port,
         path: '/v1/objects/hosts/' + hostName + '?attrs=state',
         method: 'GET',
