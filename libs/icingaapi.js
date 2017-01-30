@@ -241,41 +241,7 @@ icingaapi.prototype.createHost = function (template, host, displayname, gruppe, 
             "vars.server": onServer
         }
     })
-
-    var options = {
-        hostname: self.url,
-        timeout: self.timeout,
-        port: self.port,
-        path: '/v1/objects/hosts/' + host,
-        rejectUnauthorized: false,
-        auth: self.user + ":" + self.pass,
-        method: 'PUT',
-        headers: {
-            "Accept": "application/json",
-            "Content-Type": "applicatoin/json"
-        }
-    };
-    var req = https.request(options, (res) => {
-        res.on('data', (successMesage) => {
-            state = {
-                "Statuscode": res.statusCode,
-                "StatusMessage": res.statusMessage,
-                "Statecustom": successMesage
-            }
-        });
-    });
-    req.end(hostObj);
-
-    req.on('error', (e) => {
-        return callback(e, null);
-    });
-    req.on('close', function (e) {
-        if (state.Statuscode == "200") {
-            return callback(null, "" + state.Statecustom);
-        } else {
-            return callback("" + state.Statecustom, null);
-        }
-    })
+    this.createHostCustom(hostObj, host, callback);
 }
 icingaapi.prototype.createService = function (template, host, service, displayname, gruppe, onServer, callback) {
     var self = this;
