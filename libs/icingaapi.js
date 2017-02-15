@@ -81,7 +81,7 @@ icingaapi.prototype.getHosts = function (callback) {
 icingaapi.prototype.getHostFiltered = function (filter, callback) {
     var self = this;
     var resData = '';
-    
+
     var options = {
         hostname: self.url,
         timeout: self.timeout,
@@ -95,21 +95,21 @@ icingaapi.prototype.getHostFiltered = function (filter, callback) {
             "Content-Type": "applicatoin/json"
         }
     }
-    var req = https.request(options, function(res){
-      res.on('data', function(chunk){
-        resData += chunk;
-      })
-      res.on('end', function(){
-        if (res.statusCode == "200") {
-          var output = JSON.parse(resData);
-          return callback(null, output.results);
-        } else {
-          return callback({
-            "Statuscode": res.statusCode,
-            "StatusMessage": res.statusMessage
-          }, null);
-        }
-      })
+    var req = https.request(options, function (res) {
+        res.on('data', function (chunk) {
+            resData += chunk;
+        })
+        res.on('end', function () {
+            if (res.statusCode == "200") {
+                var output = JSON.parse(resData);
+                return callback(null, output.results);
+            } else {
+                return callback({
+                    "Statuscode": res.statusCode,
+                    "StatusMessage": res.statusMessage
+                }, null);
+            }
+        })
     });
     req.end(JSON.stringify(filter));
 }
@@ -429,6 +429,189 @@ icingaapi.prototype.deleteService = function (service, host, callback) {
         return callback(e, null);
     });
 }
+
+icingaapi.prototype.setHostDowntime = function (dObj, hostname, callback) {
+    var self = this;
+
+    var options = {
+        hostname: self.url,
+        timeout: self.timeout,
+        port: self.port,
+        path: '/v1/actions/schedule-downtime?type=Host&filter=host.name==%22' + hostname + '%22',
+        method: 'POST',
+        rejectUnauthorized: false,
+        auth: self.user + ":" + self.pass,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    }
+
+    var req = https.request(options, (res) => {
+        res.on('data', (stateMessage) => {
+            statemess = {
+                'StatusCode': res.statusCode,
+                'StatusMessage': res.statusMessage,
+            }
+        })
+    })
+
+    req.end(JSON.stringify(dObj));
+
+    req.on('close', function (e) {
+        if (statemess.StatusCode == "200") {
+            return callback(null, {
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            });
+        } else {
+            return callback({
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            }, null);
+        }
+    })
+}
+
+icingaapi.prototype.setFilteredDowntime = function (dFilter, callback) {
+    var self = this;
+
+    var options = {
+        hostname: self.url,
+        timeout: self.timeout,
+        port: self.port,
+        path: '/v1/actions/schedule-downtime',
+        method: 'POST',
+        rejectUnauthorized: false,
+        auth: self.user + ":" + self.pass,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    }
+
+    var req = https.request(options, (res) => {
+        res.on('data', (stateMessage) => {
+            statemess = {
+                'StatusCode': res.statusCode,
+                'StatusMessage': res.statusMessage,
+            }
+        })
+    })
+
+    req.end(JSON.stringify(dFilter));
+
+    req.on('close', function (e) {
+        if (statemess.StatusCode == "200") {
+            return callback(null, {
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            });
+        } else {
+            return callback({
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            }, null);
+        }
+    })
+}
+
+icingaapi.prototype.removeFilteredDowntime = function (dFilter, callback) {
+    var self = this;
+
+    var options = {
+        hostname: self.url,
+        timeout: self.timeout,
+        port: self.port,
+        path: '/v1/actions/remove-downtime',
+        method: 'POST',
+        rejectUnauthorized: false,
+        auth: self.user + ":" + self.pass,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    }
+
+    var req = https.request(options, (res) => {
+        res.on('data', (stateMessage) => {
+            statemess = {
+                'StatusCode': res.statusCode,
+                'StatusMessage': res.statusMessage,
+            }
+        })
+    })
+
+    req.end(JSON.stringify(dFilter));
+
+    req.on('close', function (e) {
+        if (statemess.StatusCode == "200") {
+            return callback(null, {
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            });
+        } else {
+            return callback({
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            }, null);
+        }
+    })
+
+}
+
+icingaapi.prototype.disableHostNotification = function (hostname, callback) {
+    var self = this;
+
+    var notificationFilter = ({
+        'attrs': {
+            'enable_notifications': false
+        }
+    })
+
+    var options = {
+        hostname: self.url,
+        timeout: self.timeout,
+        port: self.port,
+        path: '/v1/objects/hosts/' + hostname,
+        method: 'POST',
+        rejectUnauthorized: false,
+        auth: self.user + ":" + self.pass,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    }
+
+    var req = https.request(options, (res) => {
+        res.on('data', (stateMessage) => {
+            statemess = {
+                'StatusCode': res.statusCode,
+                'StatusMessage': res.statusMessage,
+            }
+        })
+    })
+    req.end(JSON.stringify(notificationFilter));
+
+    req.on('error', (e) => {
+        return callback(e, null);
+    });
+
+    req.on('close', function (e) {
+        if (statemess.Statuscode == "200") {
+            return callback(null, {
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            });
+        } else {
+            return callback({
+                'StatusCode': statemess.StatusCode,
+                'StatusMessage': statemess.StatusMessage,
+            }, null);
+        }
+    })
+}
+
 icingaapi.prototype.setHostState = function (host, hostState, StateMessage, callback) {
     var self = this;
     var statemess;
@@ -538,6 +721,7 @@ icingaapi.prototype.setServiceState = function (service, host, serviceState, cal
         }
     })
 }
+
 icingaapi.prototype.getHostState = function (hostName, callback) {
     var self = this;
 
