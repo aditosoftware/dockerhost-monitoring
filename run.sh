@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
 while true; do
-	nodejs /icingamon/dockerexp.js
+	node /icingamon/dockerexp.js
 	sleep $LOOPTIME
 done
