@@ -1,6 +1,5 @@
 FROM alpine
 
-COPY libs/ /icingamon/libs/
 COPY dockerexp.js /icingamon/
 COPY package.json /icingamon/
 COPY run.sh /
