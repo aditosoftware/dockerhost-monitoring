@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node app.js"
   },
-  "dependencies":{
+  "dependencies": {
     "dockerode": "~2.2.10",
     "json-fs-store": "~1.0.0",
     "winston": "~2.2.0",

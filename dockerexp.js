@@ -69,49 +69,40 @@ if (del == 1) {
 //get docker info
 docker.info(function (err, data) {
     //search docker host in icinga2 server (check if this already exist);
-    icingaServer.getHostFiltered({
-        "filter": "host.name == server",
-        "filter_vars": {
-            "server": servername
-        }
-    }, function (err, result) {
-        if (result == 0) {
-            //write a custom host definition for icinga2 server
-            icingaServer.createHostCustom(JSON.stringify({
-                "templates": [templatehost],
-                "attrs": {
-                    "display_name": data.Name,
-                    "vars.group": hostgroup,
-                    "vars.Docker_version": data.ServerVersion,
-                    "vars.DockerRootDir": data.DockerRootDir,
-                    "vars.MemTotal": formatBytes(data.MemTotal, 2),
-                    "vars.CPU": data.NCPU,
-                    "vars.OS": data.OperatingSystem,
-                    "vars.Kernel": data.KernelVersion
-                }
-            }), servername, function (err, result) {
-                if (err) {
-                    logger.error("ER01:" + err);
-                } else {
-                    icingaServer.getHostState(servername, function (err, result) {
-                        if (err) {
-                            logger.error("ER14:", err, " Docker host was not created");
-                        } else {
-                            logger.debug("D015: ", "Docker host object was created");
-                            icingaServer.setHostState(servername, 0, "OK - Everything is going to be fine", function (err, data) {
-                                if (err) {
-                                    logger.error("ER13:" + JSON.stringify(err));
-                                    logger.debug("E010:setHostState(0)(err): ", err);
-                                } else {
-                                    logger.info("I005:Docker Host: ", "running")
-                                    logger.debug("D014:setHostState(0)(ok): ", data);
-                                }
-                            });
-                        }
-                    })
-                }
-            })
-        } else {
+    icingaServer.getHost(servername, function (err, result) {
+
+        if (err) {
+            if (err.Statuscode == '404') { //host was not found, create one new
+                icingaServer.createHostCustom(JSON.stringify({
+                    "templates": [templatehost],
+                    "attrs": {
+                        "display_name": data.Name,
+                        "vars.group": hostgroup,
+                        "vars.Docker_version": data.ServerVersion,
+                        "vars.DockerRootDir": data.DockerRootDir,
+                        "vars.MemTotal": formatBytes(data.MemTotal, 2),
+                        "vars.CPU": data.NCPU,
+                        "vars.OS": data.OperatingSystem,
+                        "vars.Kernel": data.KernelVersion
+                    }
+                }), servername, function (err, Objresult) {
+                    if (err) {
+                        logger.error("ER02:" + JSON.stringify(err));
+                    } else {
+
+                        icingaServer.setHostState(servername, 0, "OK - Everything is going to be fine", function (err, data) {
+                            if (err) {
+                                logger.error("Cannot update host state " + JSON.stringify(err));
+                            } else {
+                                logger.debug("Status of host was updated " + JSON.stringify(data));
+                            }
+                        });
+                    }
+                })
+            } else {
+                logger.error("ER01:" + JSON.stringify(err));
+            }
+        } else { //host in icinga2 server found
             //set state "OK" to docker hosting
             icingaServer.setHostState(servername, 0, "OK - Everything is going to be fine", function (err, data) {
                 if (err) {
@@ -125,62 +116,135 @@ docker.info(function (err, data) {
         }
     })
 })
+
 //get a list of all container on the docker host
 docker.listContainers(opts, function (err, containers) {
-    var contArr = [];
 
-    for (var i = 0; i < containers.length; i++) {
-        var container = docker.getContainer(containers[i].Id);
-        //write an array with all containers on docker host
-        container.inspect(function (err, conData) {
-            if (conData.Config.Labels == null) {
-                dockerCon.push({
-                    "id": conData.Id.slice(0, 12),
-                    "name": conData.Name.slice(1, conData.Name.length),
-                    "state": conData.State.Status,
-                    "pid": conData.State.Pid,
-                    "started": conData.State.StartedAt,
-                    "processes": null
-                });
+    if (err) {
+        logger.error("Cannot read containers information " + JSON.stringify(err));
+    } else {
 
-            } else {
-
-                if (conData.Config.Labels.monitoring != "false") {
+        for (var i = 0; i < containers.length; i++) {
+            var container = docker.getContainer(containers[i].Id);
+            //write an array with all containers on docker host
+            container.inspect(function (err, conData) {
+                if (conData.Config.Labels == null) {
                     dockerCon.push({
                         "id": conData.Id.slice(0, 12),
                         "name": conData.Name.slice(1, conData.Name.length),
                         "state": conData.State.Status,
                         "pid": conData.State.Pid,
                         "started": conData.State.StartedAt,
-                        "processes": conData.Config.Labels.processes
+                        "processes": null
                     });
+
+                } else {
+
+                    if (conData.Config.Labels.monitoring != "false") {
+                        dockerCon.push({
+                            "id": conData.Id.slice(0, 12),
+                            "name": conData.Name.slice(1, conData.Name.length),
+                            "state": conData.State.Status,
+                            "pid": conData.State.Pid,
+                            "started": conData.State.StartedAt,
+                            "processes": conData.Config.Labels.processes
+                        });
+                    }
+                }
+
+            })
+        }
+        //get all host objects of icinga server with filter "servername (system var)"
+        icingaServer.getHostFiltered({
+            "filter": "host.vars.server == server",
+            "attrs": {
+                "filter_vars": {
+                    "server": servername
                 }
             }
+        }, function (err, iciObj) {
+            if (err) {
+                if (err.Statuscode == '404') {
+                    deleteDiffToDocker(dockerCon, icingaCon); //delete host objects in icinga2 if a container on docker host don't exist
+                    createDiffToDocker(dockerCon, icingaCon); //create host objects in icinga2 if found a docker container, that not already exist in icinga2
+                    for (var i = 0; i < dockerCon.length; i++) {
+                        setHostState(dockerCon[i]); //set state of host object in icinga for all containers
+                    }
+                } else {
+                    logger.error("ER02:" + JSON.stringify(err));
+                }
+            } else {
+                for (var i = 0; i < iciObj.length; i++) {
+                    icingaCon.push(iciObj[i]);
+                }
 
+                deleteDiffToDocker(dockerCon, icingaCon); //delete host objects in icinga2 if a container on docker host don't exist
+                createDiffToDocker(dockerCon, icingaCon); //create host objects in icinga2 if found a docker container, that not already exist in icinga2
+                for (var i = 0; i < dockerCon.length; i++) {
+                    setHostState(dockerCon[i]); //set state of host object in icinga for all containers
+                }
+            }
         })
     }
-    //get all host objects of icinga server with filter "servername (system var)"
-    icingaServer.getHostFiltered({
-        "filter": "host.vars.server == server",
-        "filter_vars": {
-            "server": servername
-        }
-    }, function (err, iciObj) {
-        if (err) {
-            logger.error("ER02:" + JSON.stringify(err));
-        } else {
-            for (var i = 0; i < iciObj.length; i++) {
-                icingaCon.push(iciObj[i]);
-            }
-
-            deleteDiffToDocker(dockerCon, icingaCon); //delete host objects in icinga2 if a container on docker host don't exist
-            createDiffToDocker(dockerCon, icingaCon); //create host objects in icinga2 if found a docker container, that not already exist in icinga2
-            for (var i = 0; i < dockerCon.length; i++) {
-                setHostState(dockerCon[i]); //set state of host object in icinga for all containers
-            }
-        }
-    })
 })
+
+
+//get a list of all container on the docker host
+// docker.listContainers(opts, function (err, containers) {
+//     var contArr = [];
+
+//     for (var i = 0; i < containers.length; i++) {
+//         var container = docker.getContainer(containers[i].Id);
+//         //write an array with all containers on docker host
+//         container.inspect(function (err, conData) {
+//             if (conData.Config.Labels == null) {
+//                 dockerCon.push({
+//                     "id": conData.Id.slice(0, 12),
+//                     "name": conData.Name.slice(1, conData.Name.length),
+//                     "state": conData.State.Status,
+//                     "pid": conData.State.Pid,
+//                     "started": conData.State.StartedAt,
+//                     "processes": null
+//                 });
+
+//             } else {
+
+//                 if (conData.Config.Labels.monitoring != "false") {
+//                     dockerCon.push({
+//                         "id": conData.Id.slice(0, 12),
+//                         "name": conData.Name.slice(1, conData.Name.length),
+//                         "state": conData.State.Status,
+//                         "pid": conData.State.Pid,
+//                         "started": conData.State.StartedAt,
+//                         "processes": conData.Config.Labels.processes
+//                     });
+//                 }
+//             }
+
+//         })
+//     }
+//     //get all host objects of icinga server with filter "servername (system var)"
+//     icingaServer.getHostFiltered({
+//         "filter": "host.vars.server == server",
+//         "filter_vars": {
+//             "server": servername
+//         }
+//     }, function (err, iciObj) {
+//         if (err) {
+//             logger.error("ER02:" + JSON.stringify(err));
+//         } else {
+//             for (var i = 0; i < iciObj.length; i++) {
+//                 icingaCon.push(iciObj[i]);
+//             }
+
+//             deleteDiffToDocker(dockerCon, icingaCon); //delete host objects in icinga2 if a container on docker host don't exist
+//             createDiffToDocker(dockerCon, icingaCon); //create host objects in icinga2 if found a docker container, that not already exist in icinga2
+//             for (var i = 0; i < dockerCon.length; i++) {
+//                 setHostState(dockerCon[i]); //set state of host object in icinga for all containers
+//             }
+//         }
+//     })
+// })
 //function to check state of a host object in icinga2
 function setHostState(pCon) {
     let con = pCon;
