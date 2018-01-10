@@ -9,7 +9,8 @@
   "dependencies":{
     "dockerode": "~2.2.10",
     "json-fs-store": "~1.0.0",
-    "winston": "~2.2.0"
+    "winston": "~2.2.0",
+    "icinga2-api": "~1.0.3"
   },
   "keywords": [
     "nsca",

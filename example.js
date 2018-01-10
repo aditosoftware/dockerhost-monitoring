@@ -1,5 +1,5 @@
 const Docker = require('dockerode');
-const icingaapi = require('./libs/icingaapi')
+const icingaapi = require('icinga2-api')
 
 const dockersock = process.env.DOCKERSOCK;
 const monUrl = process.env.MONITORING_API_URL;

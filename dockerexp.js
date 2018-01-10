@@ -1,6 +1,6 @@
 var del = 1;
 const Docker = require('dockerode');
-const icingaapi = require('./libs/icingaapi')
+const icingaapi = require('icinga2-api')
 var store = require('json-fs-store')('storage');
 var winston = require('winston');
 
@@ -167,7 +167,7 @@ docker.listContainers(opts, function (err, containers) {
         }
     }, function (err, iciObj) {
         if (err) {
-            logger.error("ER02:" + err);
+            logger.error("ER02:" + JSON.stringify(err));
         } else {
             for (var i = 0; i < iciObj.length; i++) {
                 icingaCon.push(iciObj[i]);
