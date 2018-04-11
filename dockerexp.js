@@ -298,7 +298,8 @@ function createSetServiceState(con) {
                             (function (procFromMon) {
                                 var searchIN = "" + conProc, substring = procFromMon;
                                 if (searchIN.indexOf(substring) > -1) {
-                                    icingaServer.setServiceState(procFromMon, con.id, 0, function (err, result) {
+                                    serviceMessage = "Process " + procFromMon + " is running"
+                                    icingaServer.setServiceState(procFromMon, con.id, 0, serviceMessage, function (err, result) {
                                         if (err) {
                                             logger.error("ER04:" + err.toString());
                                             logger.debug("E005:setServiceState: ", err, " Servicename: ", procFromMon, " Container: ", con.id);
@@ -307,7 +308,7 @@ function createSetServiceState(con) {
                                         }
                                     })
                                 } else {
-                                    icingaServer.setServiceState(procFromMon, con.id, 2, function (err, result) {
+                                    icingaServer.setServiceState(procFromMon, con.id, 2, "dummy", function (err, result) {
                                         if (err) {
                                             logger.error("ER05:" + err);
                                             logger.debug("E006:setServiceState: ", err, "\n", " Servicename: ", procFromMon, " Container: ", con.id);
